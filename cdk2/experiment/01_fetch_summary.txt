@@ -1,0 +1,16 @@
+타겟: Cyclin-dependent kinase 2 (CHEMBL301)
+원본: 5367건
+SMILES 없음 제거: -6건 -> 5361건
+활성값 없음 제거: -58건 -> 5303건
+단위가 nM이 아닌 항목 제거: -52건 -> 5251건
+부등호(>, <) 데이터 제거: -1727건 -> 3524건
+수치 변환 실패 제거: -0건 -> 3524건
+0 이하 값 제거: -0건 -> 3524건
+분자 단위 통합(중앙값): 3524건 -> 2724개 분자
+
+최종 분자 수: 2724
+  활성 (pActivity >= 6.0, IC50 <= 1 uM): 1788
+  비활성: 936
+pActivity 범위: 1.80 ~ 10.05
+pActivity 중앙값: 6.49
+저장: C:\Users\happi\deeplearning\cdk2\scripts\..\experiment\01_chembl_cdk2_activity.csv

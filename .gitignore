@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# 대용량 계산 결과 — GitHub 파일당 100MB 제한
+# 도킹 원시 출력(포즈 SDF)과 대용량 화합물 라이브러리는 올리지 않는다.
+# 보고서에 쓰이는 정리된 CSV와 그림만 커밋한다.
+cdk2/experiment/**/docked/
+cdk2/experiment/**/ligands/
+*.sdf
+*.sdf.gz
+*.mol2
+*.pdbqt
+*.smi
+*.smi.gz
+chembl_*.tsv
+chembl_*.sdf
+
+# 단백질 원본 구조 (PDB에서 언제든 다시 받을 수 있음)
+# 단, 정제한 receptor.pdb 는 재현에 필요하므로 예외로 추적한다.
+cdk2/experiment/**/*.pdb
+!cdk2/experiment/**/receptor.pdb
+!cdk2/experiment/**/ligand_*_crystal.pdb
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
