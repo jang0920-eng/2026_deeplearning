@@ -40,7 +40,7 @@ IC50만으로는 3,692건에 그쳐 학습 데이터가 부족했다.
 **한 일**
 Colab에 GNINA v1.3.3 설치(conda 대신 GitHub 릴리스 바이너리, Drive에 저장해 재사용).
 3RPR 수용체 준비(물 217개·리간드 25Z 제거, pH 7.4 수소 부가) 및 redocking용 25Z 추출.
-리간드 20개로 도킹 속도 측정. GitHub 저장소 `cdk2-virtual-screening` 생성.
+리간드 20개로 도킹 속도 측정. GitHub 저장소 `2026_deeplearning` 생성.
 (상세: `02_docking.md`)
 
 **결정 1 — CNN 채점을 켠 채로 유지**
