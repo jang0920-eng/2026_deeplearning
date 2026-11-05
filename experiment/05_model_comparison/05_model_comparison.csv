@@ -1,0 +1,5 @@
+model,n,actives,threshold,precision,recall,pr_auc,ap,roc_auc,ef1,ef5,ef10,ef20,ef_max,best_params,val_ap
+Morgan + RF,273,159,0.438,0.7403,0.8428,0.8807,0.8811,0.8231,1.717,1.717,1.717,1.686,1.717,"{""n_estimators"": 500, ""max_depth"": null, ""min_samples_leaf"": 1}",0.8484
+ChemBERTa-10M-MTR + RF,273,159,0.5021,0.7,0.8365,0.8637,0.8642,0.7985,1.717,1.717,1.717,1.655,1.717,"{""n_estimators"": 500, ""max_depth"": null, ""min_samples_leaf"": 1}",0.8388
+ChemBERTa-10M-MTR + LogReg,273,159,0.4518,0.7643,0.7547,0.8355,0.8364,0.7875,1.717,1.594,1.653,1.53,1.717,"{""C"": 0.01}",0.7941
+Morgan + LogReg,273,159,0.651,0.7405,0.7358,0.7611,0.763,0.7345,1.717,1.349,1.208,1.405,1.717,"{""C"": 0.1}",0.778

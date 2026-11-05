@@ -29,3 +29,8 @@ experiment/**/*.pdb
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# 사전학습 모델 가중치 (HuggingFace 에서 받는 것이라 저장소에 포함하지 않음)
+models/
+*.bin
+!experiment/**/*.bin
