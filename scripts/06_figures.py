@@ -106,57 +106,55 @@ def fig_redocking(poses, outpath):
 # ---- 그림 2: 모델 비교 -------------------------------------------------------
 
 def fig_model_comparison(scores, metrics, outpath):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.6, 3.9),
-                                   gridspec_kw={"width_ratios": [1.15, 1]})
+    """좌: 표현(feature) 비교 — 분류기는 더 나은 RF 로 고정해 표현만 비교한다.
+       우: 여섯 조합의 지표 전체. EF 천장도 함께 보인다."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.4, 4.6),
+                                   gridspec_kw={"width_ratios": [1, 1.1]})
     y = scores["label"].to_numpy()
-    model_cols = [c for c in scores.columns if c not in ("molecule_chembl_id", "label")]
     order = metrics.sort_values("pr_auc", ascending=False)["model"].tolist()
-    model_cols = [m for m in order if m in model_cols]
-    colors = [BLUE, ORANGE, AQUA, YELLOW][:len(model_cols)]
+    order = [m for m in order if m in scores.columns]
 
-    # (좌) PR 곡선
+    # ---- 좌: RF 로 고정하고 표현만 비교 (3개 — 전부 쌍 검증 통과한 slot 1~3)
+    rf_models = [m for m in order if m.endswith("+ RF")]
     ax1.grid(zorder=0); ax1.set_axisbelow(True)
     base = y.mean()
     ax1.axhline(base, color=MUTED, lw=1.2, ls="--", zorder=1)
-    ax1.text(0.02, base - 0.035, f"무작위 기준선 {base:.1%}", color=INK2, fontsize=8)
+    ax1.text(0.02, base - 0.03, f"무작위 기준선 {base:.1%}", color=INK2, fontsize=8)
 
-    for m, c in zip(model_cols, colors):
+    for m, c in zip(rf_models, [BLUE, ORANGE, AQUA]):
         prec, rec, _ = precision_recall_curve(y, scores[m])
         pr = metrics.loc[metrics["model"] == m, "pr_auc"].iloc[0]
         ax1.plot(rec, prec, lw=2, color=c, zorder=3, solid_capstyle="round",
-                 label=f"{m}  (PR-AUC {pr:.3f})")
-
+                 label=f"{m.replace(' + RF', '')}   {pr:.3f}")
     ax1.set_xlim(0, 1); ax1.set_ylim(0.4, 1.02)
     ax1.set_xlabel("recall"); ax1.set_ylabel("precision")
-    ax1.set_title("PR 곡선 (scaffold split test, n=%d)" % len(y))
-    ax1.legend(loc="lower left", fontsize=7.5)
+    ax1.set_title("표현 비교 (분류기는 RF 로 고정), PR-AUC")
+    ax1.legend(loc="lower left", fontsize=8)
 
-    # (우) 지표 비교 — EF 천장을 함께 표시
+    # ---- 우: 여섯 조합 전체
     ax2.grid(axis="x", zorder=0); ax2.set_axisbelow(True)
-    idx = np.arange(len(model_cols))[::-1]
+    idx = np.arange(len(order))[::-1]
     h = 0.26
+    ceiling = metrics["ef_max"].iloc[0]
     for off, (key, c, lab) in enumerate([("pr_auc", BLUE, "PR-AUC"),
                                          ("roc_auc", ORANGE, "ROC-AUC"),
                                          ("ef5", AQUA, "EF 5%")]):
-        vals = [metrics.loc[metrics["model"] == m, key].iloc[0] for m in model_cols]
-        # EF 는 천장 대비 비율로 그려야 다른 지표와 같은 축에 놓을 수 있다
-        ceiling = metrics["ef_max"].iloc[0] if key == "ef5" else 1.0
-        plotted = [v / ceiling for v in vals]
-        bars = ax2.barh(idx + (1 - off) * h, plotted, height=h * 0.86,
-                        color=c, zorder=3, label=lab)
+        vals = [metrics.loc[metrics["model"] == m, key].iloc[0] for m in order]
+        denom = ceiling if key == "ef5" else 1.0
+        bars = ax2.barh(idx + (1 - off) * h, [v / denom for v in vals],
+                        height=h * 0.86, color=c, zorder=3, label=lab)
         for b, v in zip(bars, vals):
             ax2.text(b.get_width() + 0.012, b.get_y() + b.get_height() / 2,
-                     f"{v:.3f}", va="center", fontsize=7.5, color=INK2)
+                     f"{v:.3f}", va="center", fontsize=7, color=INK2)
 
     ax2.axvline(1.0, color=MUTED, lw=1.2, ls="--", zorder=1)
     ax2.set_yticks(idx)
-    ax2.set_yticklabels([m.replace(" + ", "\n+ ") for m in model_cols], fontsize=8)
-    ax2.set_xlim(0, 1.22)
-    ax2.set_ylim(-0.95, len(model_cols) - 0.4)
-    ax2.set_xlabel("지표값 (EF 는 이론적 최대 %.2f 대비 비율)" % metrics["ef_max"].iloc[0])
+    ax2.set_yticklabels([m.replace(" + ", "\n+ ") for m in order], fontsize=7.5)
+    ax2.set_xlim(0, 1.24)
+    ax2.set_ylim(-1.15, len(order) - 0.4)
+    ax2.set_xlabel("지표값 (EF 는 이론적 최대 %.2f 대비 비율)" % ceiling)
     ax2.set_title("EF 는 천장에 붙어 모델을 구분하지 못한다")
-    ax2.legend(loc="lower center", ncols=3, fontsize=8,
-               bbox_to_anchor=(0.5, -0.02))
+    ax2.legend(loc="lower center", ncols=3, fontsize=8, bbox_to_anchor=(0.5, -0.02))
 
     fig.savefig(outpath)
     plt.close(fig)

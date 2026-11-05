@@ -6,6 +6,8 @@
 | Morgan + RF | 0.7403 | 0.8428 | 0.8807 | 0.8811 | 0.8231 | 1.717 | 1.717 | 1.686 |
 | ChemBERTa-10M-MTR + LogReg | 0.7643 | 0.7547 | 0.8355 | 0.8364 | 0.7875 | 1.594 | 1.653 | 1.53 |
 | ChemBERTa-10M-MTR + RF | 0.7 | 0.8365 | 0.8637 | 0.8642 | 0.7985 | 1.717 | 1.717 | 1.655 |
+| ChemBERTa-77M-MLM + LogReg | 0.6962 | 0.6918 | 0.74 | 0.7444 | 0.6832 | 1.472 | 1.463 | 1.498 |
+| ChemBERTa-77M-MLM + RF | 0.6309 | 0.9245 | 0.8262 | 0.8269 | 0.7446 | 1.594 | 1.653 | 1.655 |
 
 - test 273개 중 활성 159개 (기준선 58.2%)
 - EF 5% = 상위 5%의 활성 비율 ÷ 전체 활성 비율. **1이면 무작위와 같음**
@@ -23,3 +25,5 @@
 | Morgan + RF | 0.8484 | `{"n_estimators": 500, "max_depth": null, "min_samples_leaf": 1}` |
 | ChemBERTa-10M-MTR + LogReg | 0.7941 | `{"C": 0.01}` |
 | ChemBERTa-10M-MTR + RF | 0.8388 | `{"n_estimators": 500, "max_depth": null, "min_samples_leaf": 1}` |
+| ChemBERTa-77M-MLM + LogReg | 0.7338 | `{"C": 0.1}` |
+| ChemBERTa-77M-MLM + RF | 0.809 | `{"n_estimators": 500, "max_depth": 20, "min_samples_leaf": 1}` |
