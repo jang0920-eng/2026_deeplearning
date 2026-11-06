@@ -34,3 +34,7 @@ desktop.ini
 models/
 *.bin
 !experiment/**/*.bin
+
+# ChEMBL 원본·필터 결과 (수백 MB — 스크립트로 재현 가능)
+chembl_*_chemreps*
+experiment/07_filter/07_filtered*.csv*

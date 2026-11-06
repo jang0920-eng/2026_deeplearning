@@ -161,6 +161,58 @@ def fig_model_comparison(scores, metrics, outpath):
     print("저장:", outpath)
 
 
+# ---- 그림 3: 1단계 필터 깔때기 ------------------------------------------------
+
+def fig_filter_funnel(counts, outpath):
+    """어느 기준이 얼마나 걸러냈는지. 숫자가 커서 로그 스케일이 아니라
+       누적 막대로 보여야 비율이 읽힌다."""
+    import matplotlib.patches as mpatches
+
+    tot, uniq = counts["total"], counts["unique"]
+    steps = [
+        ("크기 범위 밖", counts["size"] + counts["inorganic"] + counts["parse_fail"]),
+        ("lead-like 위반", counts["lead_like"]),
+        ("Lipinski 위반", counts["lipinski"]),
+        ("PAINS 구조", counts["pains"]),
+        ("중복 구조", counts["duplicates"]),
+    ]
+
+    fig, ax = plt.subplots(figsize=(7.6, 3.6))
+    ax.grid(axis="x", zorder=0)
+    ax.set_axisbelow(True)
+
+    left = tot
+    ys, labels = [], []
+    for i, (name, n) in enumerate(steps):
+        y = len(steps) - i
+        ax.barh(y, left, height=0.62, color="#e8e7e3", zorder=2)
+        ax.barh(y, left - n, height=0.62, color=BLUE, zorder=3)
+        ax.text(left + tot * 0.012, y, f"−{n:,}", va="center",
+                fontsize=8, color=ORANGE)
+        ys.append(y); labels.append(name)
+        left -= n
+
+    ax.barh(0, uniq, height=0.62, color=AQUA, zorder=3)
+    ax.text(uniq + tot * 0.012, 0, f"{uniq:,}", va="center",
+            fontsize=9, color=INK, fontweight="bold")
+    ys.append(0); labels.append("최종 통과")
+
+    ax.set_yticks(ys)
+    ax.set_yticklabels(labels, fontsize=9)
+    ax.set_xlim(0, tot * 1.16)
+    ax.set_xlabel("남은 화합물 수")
+    ax.set_title("1단계 물리화학 필터: %s개 → %s개" % (f"{tot:,}", f"{uniq:,}"))
+    ax.xaxis.set_major_formatter(lambda v, p: f"{v/1e6:.1f}M" if v else "0")
+
+    ax.legend(handles=[mpatches.Patch(color=BLUE, label="남은 수"),
+                       mpatches.Patch(color=AQUA, label="최종 통과"),
+                       mpatches.Patch(color="#e8e7e3", label="이전 단계 수")],
+              loc="lower right", fontsize=8)
+    fig.savefig(outpath)
+    plt.close(fig)
+    print("저장:", outpath)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default="experiment/06_figures")
@@ -174,6 +226,11 @@ def main():
     scores = pd.read_csv("experiment/05_model_comparison/05_test_scores.csv")
     metrics = pd.read_csv("experiment/05_model_comparison/05_model_comparison.csv")
     fig_model_comparison(scores, metrics, out / "fig2_model_comparison.png")
+
+    cpath = Path("experiment/07_filter/07_filter_counts.json")
+    if cpath.exists():
+        import json
+        fig_filter_funnel(json.loads(cpath.read_text()), out / "fig3_filter_funnel.png")
 
 
 if __name__ == "__main__":

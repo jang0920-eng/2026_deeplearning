@@ -1,0 +1,12 @@
+{
+ "total": 2897819,
+ "passed": 1478582,
+ "size": 142094,
+ "lead_like": 1039701,
+ "pains": 87750,
+ "lipinski": 149073,
+ "inorganic": 604,
+ "parse_fail": 15,
+ "duplicates": 54625,
+ "unique": 1423957
+}
