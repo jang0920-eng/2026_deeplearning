@@ -176,6 +176,12 @@ def main():
     (outdir / "09_selection_stats.json").write_text(
         json.dumps(stats, indent=1, ensure_ascii=False), encoding="utf-8")
 
+    # 그림용 — 두 선별 방식의 최근접 유사도 분포
+    pd.concat([
+        pd.DataFrame({"method": "diversity", "nn_similarity": nn.round(4)}),
+        pd.DataFrame({"method": "naive_top", "nn_similarity": naive_nn.round(4)}),
+    ]).to_csv(outdir / "09_nn_similarity.csv", index=False)
+
     md = f"""### 3단계 다양성 선별 ({stats['pool']:,} → {stats['selected']:,})
 
 점수 상위 {stats['pool']:,}개에서 **Tanimoto {stats['cutoff']} 이상으로 겹치지 않는**

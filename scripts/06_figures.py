@@ -30,9 +30,13 @@ SURFACE = "#fcfcfb"
 
 
 def setup_style():
-    for name in ("Noto Sans CJK KR", "Noto Sans CJK JP", "NanumGothic"):
-        if any(f.name == name for f in font_manager.fontManager.ttflist):
-            plt.rcParams["font.family"] = name
+    # 한글 글꼴에 수학 기호가 빠져 있는 경우가 있다 (NanumGothic 은 Å, 세 글꼴 모두
+    # U+2212 마이너스가 없다). matplotlib 의 글꼴 fallback 목록을 쓰면
+    # 한글은 앞 글꼴에서, 없는 기호는 DejaVu Sans 에서 가져온다 → 네모 박스가 안 나온다.
+    available = {f.name for f in font_manager.fontManager.ttflist}
+    for name in ("Noto Sans CJK KR", "Noto Sans CJK JP", "Malgun Gothic", "NanumGothic"):
+        if name in available:
+            plt.rcParams["font.family"] = [name, "DejaVu Sans"]
             break
     plt.rcParams.update({
         "figure.facecolor": SURFACE,
