@@ -12,6 +12,8 @@ experiment/**/docked/
 experiment/**/ligands/
 *.sdf
 *.sdf.gz
+# 예외 — 도킹 입력 리간드는 재현에 필요하므로 추적한다 (약 0.4MB)
+!experiment/10_ligands/ligands_all.sdf.gz
 *.mol2
 *.pdbqt
 *.smi
