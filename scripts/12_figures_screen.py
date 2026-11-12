@@ -32,6 +32,27 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 
 
+def plain_log_ticks(ax, axis="x", unit=""):
+    """로그 축 눈금을 10^n 수식 대신 보통 숫자로 쓴다.
+
+    matplotlib 의 로그 눈금은 `\\mathdefault{10^{-4}}` 라는 수식으로 그려지는데,
+    이 수식은 한글 글꼴을 그대로 따라가고 그 글꼴에는 U+2212 마이너스가 없어
+    지수가 네모로 나온다. 읽기에도 "0.01%" 쪽이 "10^-2" 보다 낫다.
+    """
+    def fmt(v, _pos):
+        if v <= 0:
+            return ""
+        if v >= 1000:
+            return f"{v / 1000:,.0f}K{unit}" if v < 1e6 else f"{v / 1e6:,.0f}M{unit}"
+        if v >= 1:
+            return f"{v:,.0f}{unit}"
+        return f"{v:g}{unit}"
+
+    target = ax.xaxis if axis == "x" else ax.yaxis
+    target.set_major_formatter(plt.FuncFormatter(fmt))
+    target.set_minor_formatter(plt.NullFormatter())
+
+
 def load_style():
     """06_figures.py 의 스타일·색을 재사용한다 (모듈 이름이 숫자로 시작해 import 불가)."""
     spec = importlib.util.spec_from_file_location("fig06", HERE / "06_figures.py")
@@ -74,6 +95,7 @@ def fig_funnel(S, stats08, stats09, outpath):
 
     ax.set_yticks(y, labels)
     ax.set_xlim(5, 2.9e7)
+    plain_log_ticks(ax, "x")
     ax.set_xlabel("분자 수 (로그 축)")
     ax.set_title("단계별 통과 분자 수", loc="left", pad=10)
     for s in ("left",):
@@ -96,6 +118,7 @@ def fig_ml_screen(S, hist, known, stats08, outpath):
     centers = (hist["bin_left"] + hist["bin_right"]) / 2
     ax.bar(centers, hist["count"], width=0.0092, color=S.BLUE, zorder=3)
     ax.set_yscale("log")
+    plain_log_ticks(ax, "y")
     ax.set_xlim(0, 1)
     ax.set_xlabel("RF 예측 확률")
     ax.set_ylabel("분자 수 (로그 축)")
@@ -103,10 +126,13 @@ def fig_ml_screen(S, hist, known, stats08, outpath):
 
     cut = stats08["score_at_top_n"]
     ax.axvline(cut, color=S.ORANGE, lw=1.6, ls="--", zorder=4)
-    ax.annotate(f"상위 {stats08['top_n_saved']:,}개 경계\n{cut:.3f}",
-                xy=(cut, ax.get_ylim()[1] * 0.1), xytext=(-8, 0),
-                textcoords="offset points", ha="right", va="center",
-                fontsize=8.2, color=S.ORANGE)
+    # 막대 위에 겹치지 않도록 축 상단에 붙이고 흰 상자를 깐다
+    ax.annotate(f"상위 {stats08['top_n_saved']:,}개 경계 {cut:.3f}",
+                xy=(cut, 1), xycoords=("data", "axes fraction"),
+                xytext=(7, -8), textcoords="offset points",
+                ha="left", va="top", fontsize=8.2, color=S.ORANGE, zorder=5,
+                bbox=dict(boxstyle="round,pad=0.3", facecolor=S.SURFACE,
+                          edgecolor="none"))
 
     # (b) 미지 분자 회수 곡선 — 라이브러리를 배경으로 한 농축
     ax = axes[1]
@@ -135,6 +161,7 @@ def fig_ml_screen(S, hist, known, stats08, outpath):
     ax.plot(grid * 100, grid * 100, lw=1.2, ls=":", color=S.MUTED, zorder=2,
             label="무작위 (기준선)")
     ax.set_xscale("log")
+    plain_log_ticks(ax, "x", unit="%")
     ax.set_xlim(100 / n_lib, 100)
     ax.set_ylim(-3, 103)
     ax.set_xlabel("점수 상위 몇 % 까지 봤는가 (로그 축)")
@@ -146,11 +173,14 @@ def fig_ml_screen(S, hist, known, stats08, outpath):
     for k in ("ef_top0.01",):
         ef = stats08["enrichment"]["test"].get(k)
     if ef:
-        ax.annotate(f"상위 1% 에서 EF {ef}",
+        ax.annotate(f"상위 1% 에서\ntest 활성 {stats08['enrichment']['test']['active_top0.01']}개 회수"
+                    f"\nEF {ef}",
                     xy=(1, stats08["enrichment"]["test"]["active_top0.01"]
                         / max(1, stats08["enrichment"]["test"]["n_active_in_library"]) * 100),
-                    xytext=(12, -26), textcoords="offset points", fontsize=8.4,
-                    color=S.INK2,
+                    xytext=(-14, 34), textcoords="offset points", fontsize=8.4,
+                    ha="right", va="bottom", color=S.INK2, zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.35", facecolor=S.SURFACE,
+                              edgecolor=S.MUTED, linewidth=0.7),
                     arrowprops=dict(arrowstyle="-", color=S.MUTED, lw=0.9))
 
     fig.tight_layout()
@@ -176,17 +206,20 @@ def fig_diversity(S, nn, sel, known_props, stats09, outpath):
         ax.hist(v, bins=bins, histtype="step", lw=2.0, color=color, zorder=3,
                 label=f"{name} (평균 {v.mean():.3f})")
     ax.axvline(stats09["cutoff"], color=S.MUTED, lw=1.1, ls="--", zorder=2)
-    ax.text(stats09["cutoff"] - 0.015, ax.get_ylim()[1] * 0.95,
-            f"cutoff {stats09['cutoff']}", ha="right", va="top",
-            fontsize=8.2, color=S.INK2)
+    ax.annotate(f"cutoff {stats09['cutoff']}",
+                xy=(stats09["cutoff"], 0.72), xycoords=("data", "axes fraction"),
+                xytext=(6, 0), textcoords="offset points",
+                ha="left", va="center", fontsize=8.2, color=S.INK2, zorder=6,
+                bbox=dict(boxstyle="round,pad=0.25", facecolor=S.SURFACE,
+                          edgecolor="none"))
     ax.set_xlabel("집합 내 최근접 Tanimoto 유사도")
     ax.set_ylabel("분자 수")
     ax.set_title("(a) 선별 방식에 따른 구조 중복", loc="left", pad=10)
     ax.legend(loc="upper left")
 
-    ax.text(0.98, 0.55,
+    ax.text(0.98, 0.97,
             f"서로 다른 Murcko 골격\n다양성 선별 {stats09['n_murcko_scaffold']:,}종"
-            f"  ·  점수 상위 {stats09['naive_top_n_scaffold']:,}종",
+            f"\n점수 상위 {stats09['naive_top_n_scaffold']:,}종",
             transform=ax.transAxes, ha="right", va="top", fontsize=8.2,
             color=S.INK2,
             bbox=dict(boxstyle="round,pad=0.45", facecolor=S.SURFACE,
@@ -202,8 +235,12 @@ def fig_diversity(S, nn, sel, known_props, stats09, outpath):
     ax.plot(sel["mw"], sel["logp"], "o", ms=3.2, lw=0, color=S.BLUE,
             alpha=0.6, zorder=4, label=f"도킹 대상 (n={len(sel):,})")
     ax.axvline(450, color=S.MUTED, lw=1.0, ls="--", zorder=2)
-    ax.text(447, ax.get_ylim()[1], "필터 상한 MW 450", ha="right", va="top",
-            fontsize=8.2, color=S.INK2, rotation=90)
+    ax.annotate("1단계 필터 상한 MW 450",
+                xy=(450, 1), xycoords=("data", "axes fraction"),
+                xytext=(-6, -6), textcoords="offset points",
+                ha="right", va="top", fontsize=8.2, color=S.INK2, zorder=6,
+                bbox=dict(boxstyle="round,pad=0.25", facecolor=S.SURFACE,
+                          edgecolor="none"))
     ax.set_xlabel("분자량")
     ax.set_ylabel("logP")
     ax.set_title("(b) 도킹 대상의 물성 분포", loc="left", pad=10)

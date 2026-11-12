@@ -1,0 +1,26 @@
+{
+ "pool": 10000,
+ "selected": 1000,
+ "cutoff": 0.6,
+ "cutoff_relaxed_to": [],
+ "excluded_as_analogue": 2556,
+ "score_range_selected": [
+  0.76,
+  1.0
+ ],
+ "score_range_pool": [
+  0.6853,
+  1.0
+ ],
+ "ml_rank_max_selected": 4363,
+ "n_murcko_scaffold": 775,
+ "scaffold_per_molecule": 0.775,
+ "nn_similarity_mean": 0.526,
+ "nn_similarity_max": 0.597,
+ "mw_mean": 383.3,
+ "logp_mean": 2.96,
+ "rotb_mean": 4.83,
+ "heavy_mean": 27.0,
+ "naive_top_nn_similarity_mean": 0.788,
+ "naive_top_n_scaffold": 426
+}

@@ -55,6 +55,9 @@ def setup_style():
         "grid.color": "#e8e7e3", "grid.linewidth": 0.7,
         "legend.frameon": False, "legend.fontsize": 8.5,
         "axes.unicode_minus": False,
+        # 로그 축 눈금(10^-4)은 mathtext 로 그려지는데, 기본 수식 글꼴이 한글 글꼴을
+        # 따라가면서 U+2212 가 없어 네모로 나온다. 수식만 DejaVu 로 고정한다.
+        "mathtext.fontset": "dejavusans",
         "savefig.dpi": 200, "savefig.bbox": "tight",
     })
 

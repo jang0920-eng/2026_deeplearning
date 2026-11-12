@@ -1,0 +1,14 @@
+{
+ "input": 1000,
+ "prepared": 996,
+ "batches": 4,
+ "batch_size": 249,
+ "status": {
+  "ok": 996,
+  "mmff_no_forcefield": 3,
+  "embed_fail": 1
+ },
+ "seed": 42,
+ "mmff_variant": "MMFF94s",
+ "mmff_iters": 2000
+}

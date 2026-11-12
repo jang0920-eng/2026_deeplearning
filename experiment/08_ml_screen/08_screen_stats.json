@@ -1,0 +1,56 @@
+{
+ "library_scored": 1423956,
+ "top_n_saved": 20000,
+ "known_in_top_n": 911,
+ "score_min": 0.0,
+ "score_median": 0.3592,
+ "score_max": 1.0,
+ "score_at_top_n": 0.6348,
+ "n_score_ge_0.5": 154536,
+ "n_score_ge_0.7": 9076,
+ "n_score_ge_0.9": 920,
+ "filter_retention": {
+  "known_total": 2721,
+  "known_in_library": 1513,
+  "known_active_total": 1785,
+  "known_active_in_library": 987
+ },
+ "enrichment": {
+  "test": {
+   "n_in_library": 118,
+   "n_active_in_library": 68,
+   "active_top0.001": 8,
+   "ef_top0.001": 117.65,
+   "active_top0.01": 26,
+   "ef_top0.01": 38.24,
+   "active_top0.05": 39,
+   "ef_top0.05": 11.47,
+   "median_percentile_active": 2.065,
+   "median_percentile_inactive": 40.116
+  },
+  "train": {
+   "n_in_library": 1245,
+   "n_active_in_library": 845,
+   "active_top0.001": 601,
+   "ef_top0.001": 711.24,
+   "active_top0.01": 798,
+   "ef_top0.01": 94.44,
+   "active_top0.05": 838,
+   "ef_top0.05": 19.83,
+   "median_percentile_active": 0.039,
+   "median_percentile_inactive": 99.937
+  },
+  "val": {
+   "n_in_library": 150,
+   "n_active_in_library": 74,
+   "active_top0.001": 27,
+   "ef_top0.001": 364.86,
+   "active_top0.01": 68,
+   "ef_top0.01": 91.89,
+   "active_top0.05": 74,
+   "ef_top0.05": 20.0,
+   "median_percentile_active": 0.166,
+   "median_percentile_inactive": 99.797
+  }
+ }
+}
