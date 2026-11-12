@@ -38,3 +38,7 @@ models/
 # ChEMBL 원본·필터 결과 (수백 MB — 스크립트로 재현 가능)
 chembl_*_chemreps*
 experiment/07_filter/07_filtered*.csv*
+
+# ML 스크리닝 중간 산출물 (142만 개 점수 ~30MB, RF 모델 ~9MB — 스크립트로 재현 가능)
+experiment/08_ml_screen/08_library_scores.csv
+experiment/08_ml_screen/*.joblib
