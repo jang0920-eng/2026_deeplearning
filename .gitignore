@@ -44,3 +44,7 @@ experiment/07_filter/07_filtered*.csv*
 # ML 스크리닝 중간 산출물 (142만 개 점수 ~30MB, RF 모델 ~9MB — 스크립트로 재현 가능)
 experiment/08_ml_screen/08_library_scores.csv
 experiment/08_ml_screen/*.joblib
+
+# 인수인계 문서는 제출물에 들어갈 성격이 아니다 (배점별 전략 메모 포함).
+# 로컬에는 두고 저장소에서만 제외한다. 백업은 Drive 사본으로 한다.
+docs/HANDOFF.md
