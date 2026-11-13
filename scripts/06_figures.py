@@ -220,6 +220,53 @@ def fig_filter_funnel(counts, outpath):
     print("저장:", outpath)
 
 
+def fig_docking_time(timing, outpath):
+    """도킹 시간이 분자 크기에 비례한다는 것을 실측으로 보인다.
+
+    lead-like 필터(회전결합 ≤ 7)의 근거가 가정이 아니라 측정이라는 점을 보여주는 그림.
+    점수나 설정이 아니라 **시간 분포**를 보여야 하므로 표가 아니라 그림이어야 한다.
+    """
+    a = timing[timing["config"] == "A_default"].copy()
+    a = a.iloc[1:]                       # 첫 실행은 CNN 모델 로딩 포함 — 제외
+
+    fig, ax = plt.subplots(figsize=(5.8, 3.7))
+    ax.grid(zorder=0)
+    ax.set_axisbelow(True)
+
+    sc = ax.scatter(a["rot_bonds"], a["seconds"], s=38, zorder=3,
+                    c=a["heavy_atoms"], cmap="Blues", vmin=14, vmax=33,
+                    edgecolor=INK2, linewidth=0.6)
+
+    # 추세선 — 관계가 선형이라는 것만 보이면 되므로 1차로 충분
+    x = np.linspace(a["rot_bonds"].min(), a["rot_bonds"].max(), 50)
+    sl, ic = np.polyfit(a["rot_bonds"], a["seconds"], 1)
+    ax.plot(x, sl * x + ic, lw=1.6, ls="--", color=ORANGE, zorder=2)
+
+    rho = a[["rot_bonds", "seconds"]].corr(method="spearman").iloc[0, 1]
+    ax.annotate(f"회전결합 1개당 +{sl:.1f}초\nSpearman ρ = {rho:.2f}",
+                xy=(0.04, 0.96), xycoords="axes fraction", va="top", ha="left",
+                fontsize=8.6, color=INK2,
+                bbox=dict(boxstyle="round,pad=0.4", facecolor=SURFACE,
+                          edgecolor=MUTED, linewidth=0.7))
+
+    ax.axvline(7.5, color=MUTED, lw=1.0, ls=":", zorder=1)
+    ax.annotate("lead-like 상한\n회전결합 7", xy=(7.4, 1), xycoords=("data", "axes fraction"),
+                xytext=(-6, -6), textcoords="offset points", ha="right", va="top",
+                fontsize=8.2, color=INK2)
+
+    cb = fig.colorbar(sc, ax=ax, pad=0.02)
+    cb.set_label("중원자 수", fontsize=8.5, color=INK2)
+    cb.outline.set_visible(False)
+    cb.ax.tick_params(labelsize=8, color=MUTED, labelcolor=INK2)
+
+    ax.set_xlabel("회전결합 수")
+    ax.set_ylabel("도킹 소요 시간 (초)")
+    ax.set_title("도킹 시간은 분자 크기에 비례한다", loc="left", pad=10)
+    fig.savefig(outpath)
+    plt.close(fig)
+    print("저장:", outpath)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--outdir", default="experiment/06_figures")
@@ -238,6 +285,10 @@ def main():
     if cpath.exists():
         import json
         fig_filter_funnel(json.loads(cpath.read_text()), out / "fig3_filter_funnel.png")
+
+    tpath = Path("experiment/02_gnina_speed/02_gnina_timing.csv")
+    if tpath.exists():
+        fig_docking_time(pd.read_csv(tpath), out / "fig7_docking_time.png")
 
 
 if __name__ == "__main__":
