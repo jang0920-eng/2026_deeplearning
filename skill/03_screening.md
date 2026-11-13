@@ -47,15 +47,21 @@ ChEMBL 전체 화합물에서 도킹할 1,000개를 추리는 과정이다.
 
 ## 2단계 — 활성 예측 모델 선정
 
-### 비교한 조합
-표현 3종 × 분류기 2종. 사전학습 모델은 **frozen**(파인튜닝하지 않음)으로 쓰고
-encoder 출력을 masked mean pooling 한 384차원 벡터를 썼다.
+### 비교한 조합 — 분자 표현 **3계열**
 
-| 표현 | 설명 |
-|---|---|
-| Morgan fingerprint | ECFP4, 2048 bit — 수업 baseline |
-| ChemBERTa-10M-MTR | 10M 분자, multi-task regression 사전학습 |
-| ChemBERTa-77M-MLM | 77M 분자, masked language modeling 사전학습 |
+분자를 수에 담는 방식이 서로 다른 세 계열을 모두 넣었다.
+
+| 계열 | 모델 | 표현 방식 | 수업 |
+|---|---|---|---|
+| **지문** | Morgan fingerprint (ECFP4, 2048 bit) | 부분구조를 비트로 센다 — **규칙이 고정** | baseline |
+| **트랜스포머** | ChemBERTa-10M-MTR | 10M 분자, multi-task regression 사전학습 | W9 |
+| | ChemBERTa-77M-MLM | 77M 분자, masked language modeling 사전학습 | W9 |
+| **그래프** | Chemprop D-MPNN | 원자·결합을 노드·엣지로 보고 **메시지 전달로 표현을 학습** | W10 |
+
+지문·트랜스포머는 표현을 뽑아 분류기(LogReg / RF) 2종에 넣었고,
+D-MPNN 은 표현 학습과 분류를 한 네트워크에서 함께 한다.
+사전학습 모델은 **frozen**(파인튜닝하지 않음)으로 쓰고 encoder 출력을
+masked mean pooling 한 384차원 벡터를 썼다.
 
 평가는 `scripts/eval_utils.py` 의 **같은 함수**로 했다.
 hyperparameter 와 threshold 는 **val** 에서 고르고 **test 는 마지막에 한 번만** 평가했다.
@@ -63,24 +69,50 @@ scaler 는 train 에서만 fit 했다 (누출 방지).
 
 ### 결과 (scaffold split test 273개, 활성 159개)
 
-| 모델 | PR-AUC | ROC-AUC | precision | recall |
-|---|---|---|---|---|
-| **Morgan + RF** | **0.8807** | **0.8231** | 0.7403 | 0.8428 |
-| ChemBERTa-10M-MTR + RF | 0.8637 | 0.7985 | 0.7000 | 0.8365 |
-| ChemBERTa-10M-MTR + LogReg | 0.8355 | 0.7875 | 0.7643 | 0.7547 |
-| ChemBERTa-77M-MLM + RF | 0.8262 | 0.7446 | 0.6309 | 0.9245 |
-| Morgan + LogReg | 0.7611 | 0.7345 | 0.7405 | 0.7358 |
-| ChemBERTa-77M-MLM + LogReg | 0.7400 | 0.6832 | 0.6962 | 0.6918 |
+| 모델 | 계열 | PR-AUC | ROC-AUC | precision | recall |
+|---|---|---|---|---|---|
+| **Morgan + RF** | 지문 | **0.8807** | **0.8231** | 0.7403 | 0.8428 |
+| ChemBERTa-10M-MTR + RF | 트랜스포머 | 0.8637 | 0.7985 | 0.7000 | 0.8365 |
+| **Chemprop D-MPNN** | **그래프** | **0.8577** | 0.8107 | 0.7288 | 0.8113 |
+| ChemBERTa-10M-MTR + LogReg | 트랜스포머 | 0.8355 | 0.7875 | 0.7643 | 0.7547 |
+| ChemBERTa-77M-MLM + RF | 트랜스포머 | 0.8262 | 0.7446 | 0.6309 | 0.9245 |
+| Morgan + LogReg | 지문 | 0.7611 | 0.7345 | 0.7405 | 0.7358 |
+| ChemBERTa-77M-MLM + LogReg | 트랜스포머 | 0.7400 | 0.6832 | 0.6962 | 0.6918 |
 
 **채택: Morgan fingerprint + Random Forest** (PR-AUC 0.881).
 
 ### 결과에서 읽은 것
 
-**지문 + 트리가 트랜스포머 임베딩을 이겼다.**
+**표현을 학습하는 두 계열이 모두 고정된 지문에 졌다.**
+트랜스포머 최고가 0.8637, 그래프가 0.8577, 지문+RF 가 0.8807 이다.
+순위가 **지문 > 트랜스포머 > 그래프** 로 나왔고, 이 순서는 모델의 표현력 순서와 반대다.
+
 학습 데이터가 2,721개로 작고, 활성 비율이 치우쳐 있으며, 화학적으로 몇 개 골격에
-몰려 있다. 이런 조건에서는 부분 구조를 직접 세는 표현과 그것을 비선형으로 조합하는
-트리 모델이 유리하다. 사전학습 임베딩의 장점(큰 데이터에서 배운 일반적 표현)은
+몰려 있다. **표현을 데이터에서 배우는 모델은 배울 데이터가 있어야 유리하다.**
+이 규모에서는 부분 구조를 직접 세는 표현과 그것을 비선형으로 조합하는 트리 모델이
+유리하다. 사전학습 임베딩의 장점(큰 데이터에서 배운 일반적 표현)도
 파인튜닝 없이 frozen 으로 쓰면 충분히 발휘되지 않는다.
+
+D-MPNN 은 사전학습 없이 2,176개만으로 표현을 처음부터 배워야 했는데도
+ROC-AUC 0.8107 로 전체 2위다. 데이터가 더 있으면 순위가 바뀔 여지가 있다는
+뜻이지만, **이 데이터에서는 그렇지 않았다는 것이 결론이다.**
+
+→ `scripts/12_chemprop_compare.py`, `experiment/12_chemprop/`
+
+### Chemprop 학습 조건
+
+| 항목 | 값 |
+|---|---|
+| 버전 | Chemprop 2.3.1 / torch 2.15.0+cpu, 시드 42 고정 |
+| 구조 | BondMessagePassing + MeanAggregation + BinaryClassificationFFN |
+| 격자 | depth {3, 5} × dropout {0.0, 0.2}, hidden 300 — **4개** |
+| 선택 | val AP 로 `depth 3, dropout 0.2` (val AP 0.7894) |
+| early stopping | val_loss, patience 10, 최대 60 epoch → 23 epoch 에서 멈춤 |
+| threshold | val 에서 F1 최대인 0.2099 |
+| 소요 | 로컬 CPU 886초 (4개 설정 합계) |
+
+격자를 4개로 제한한 것은 **계산 자원 제약에 맞춘 선택**이다. GPU 를 쓰지 않아
+Colab 할당량을 도킹에만 쓸 수 있었다. 격자가 작으므로 "충분히 탐색했다"고는 쓰지 않는다.
 
 **10M-MTR > 77M-MLM — 사전학습 데이터 양보다 학습 목표가 중요했다.**
 두 ChemBERTa 는 구조가 완전히 동일하다 (hidden 384, layer 3, head 12,
@@ -97,7 +129,8 @@ vocab 600, 파라미터 3.43M). 다른 것은 사전학습 데이터 규모(1,00
 EF(enrichment factor)는 가상 스크리닝의 표준 지표이지만 **이 test 에서는 쓸 수 없다.**
 test 활성 비율이 58.2%이므로 EF 의 이론적 최대값은 1 / 0.582 = **1.717**이다.
 상위를 전부 활성으로 맞혀도 이 값을 넘지 못하고, 실제로 RF 두 개가 천장에 붙었다
-(EF 5% = 1.717). 지표가 모델을 구분하지 못하는 상태다.
+(EF 5% = 1.717). D-MPNN 도 EF 1% 에서 1.717 로 천장에 닿는다.
+지표가 모델을 구분하지 못하는 상태다.
 
 그래서 모델 비교는 PR-AUC·ROC-AUC 로 했다.
 **지표를 그대로 쓰지 않고 적용 조건을 먼저 확인한 사례다.**

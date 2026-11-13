@@ -1,0 +1,43 @@
+{
+ "best_cfg": {
+  "depth": 3,
+  "hidden": 300,
+  "dropout": 0.2
+ },
+ "val_ap": 0.7894,
+ "threshold": 0.2098633199930191,
+ "seed": 42,
+ "chemprop": "2.3.1",
+ "torch": "2.15.0+cpu",
+ "grid": [
+  {
+   "depth": 3,
+   "hidden": 300,
+   "dropout": 0.0
+  },
+  {
+   "depth": 3,
+   "hidden": 300,
+   "dropout": 0.2
+  },
+  {
+   "depth": 5,
+   "hidden": 300,
+   "dropout": 0.0
+  },
+  {
+   "depth": 5,
+   "hidden": 300,
+   "dropout": 0.2
+  }
+ ],
+ "max_epochs": 60,
+ "patience": 10,
+ "batch_size": 64,
+ "scaffold_overlap": {
+  "train-val": 0,
+  "train-test": 0,
+  "val-test": 0
+ },
+ "total_seconds": 886
+}

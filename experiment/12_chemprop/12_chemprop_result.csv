@@ -1,0 +1,2 @@
+model,n,actives,threshold,precision,recall,pr_auc,ap,roc_auc,ef1,ef5,ef10,ef20,ef_max,val_ap,params,epochs
+Chemprop D-MPNN,273,159,0.2099,0.7288,0.8113,0.8577,0.8585,0.8107,1.717,1.594,1.59,1.655,1.717,0.7894,"{""depth"": 3, ""hidden"": 300, ""dropout"": 0.2}",23
