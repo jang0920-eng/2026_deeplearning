@@ -25,6 +25,8 @@ from sklearn.metrics import precision_recall_curve
 # ---- 공통 스타일 -------------------------------------------------------------
 
 BLUE, ORANGE, AQUA, YELLOW = "#2a78d6", "#eb6834", "#1baf7a", "#eda100"
+# 네 번째 계열(그래프)용. 파랑·주황·초록과 구분되는 보라를 쓴다.
+PURPLE = "#7b55c9"
 INK, INK2, MUTED = "#0b0b0b", "#52514e", "#b8b7b2"
 SURFACE = "#fcfcfb"
 
@@ -112,31 +114,77 @@ def fig_redocking(poses, outpath):
 
 # ---- 그림 2: 모델 비교 -------------------------------------------------------
 
+CHEMPROP_LABEL = "Chemprop D-MPNN"
+
+
+def add_chemprop(scores, metrics):
+    """12 단계 Chemprop 결과가 있으면 05 단계 결과에 합친다.
+
+    test 행 순서가 같다고 가정하지 않고 `molecule_chembl_id` 로 맞춘다.
+    파일이 없으면 아무것도 하지 않는다 (12 단계를 아직 안 돌린 경우).
+    """
+    mpath = Path("experiment/12_chemprop/12_chemprop_result.csv")
+    spath = Path("experiment/12_chemprop/12_chemprop_test_scores.csv")
+    if not (mpath.exists() and spath.exists()):
+        return scores, metrics
+
+    cs = pd.read_csv(spath)[["molecule_chembl_id", "score"]]
+    cs = cs.rename(columns={"score": CHEMPROP_LABEL})
+    merged = scores.merge(cs, on="molecule_chembl_id", how="left")
+    if merged[CHEMPROP_LABEL].isna().any():
+        raise SystemExit("Chemprop test 점수가 05 단계 test 분자와 맞지 않는다")
+
+    cm = pd.read_csv(mpath)
+    cm = cm[[c for c in cm.columns if c in metrics.columns]]
+    out = pd.concat([metrics, cm], ignore_index=True)
+    return merged, out.sort_values("pr_auc", ascending=False).reset_index(drop=True)
+
+
 def fig_model_comparison(scores, metrics, outpath):
-    """좌: 표현(feature) 비교 — 분류기는 더 나은 RF 로 고정해 표현만 비교한다.
-       우: 여섯 조합의 지표 전체. EF 천장도 함께 보인다."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.4, 4.6),
-                                   gridspec_kw={"width_ratios": [1, 1.1]})
+    """좌: 표현 계열 비교 — 지문 / 트랜스포머 / 그래프.
+       우: 조합 전체의 지표. EF 천장도 함께 보인다.
+
+    ⚠ 왼쪽은 "분류기를 RF 로 고정해 표현만 비교"하는 패널이었다.
+    D-MPNN 은 표현 학습과 분류를 한 네트워크에서 하므로 분류기를 고정할 수 없다.
+    그래서 패널 제목을 '계열 비교'로 바꾸고, D-MPNN 만 조건이 다르다는 것을
+    범례에 표시한다. 조건이 다른 것을 같은 그림에 넣으면서 숨기지 않는다."""
+    # 오른쪽 모델 이름이 길어 왼쪽 패널을 침범한다. wspace 를 넉넉히 준다.
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.2, 4.8),
+                                   gridspec_kw={"width_ratios": [1, 1.1],
+                                                "wspace": 0.42})
     y = scores["label"].to_numpy()
     order = metrics.sort_values("pr_auc", ascending=False)["model"].tolist()
     order = [m for m in order if m in scores.columns]
 
-    # ---- 좌: RF 로 고정하고 표현만 비교 (3개 — 전부 쌍 검증 통과한 slot 1~3)
+    # ---- 좌: 표현 계열 비교. RF 고정 3개 + D-MPNN(조건 다름)
     rf_models = [m for m in order if m.endswith("+ RF")]
+    panel = rf_models + ([CHEMPROP_LABEL] if CHEMPROP_LABEL in scores.columns else [])
     ax1.grid(zorder=0); ax1.set_axisbelow(True)
     base = y.mean()
     ax1.axhline(base, color=MUTED, lw=1.2, ls="--", zorder=1)
     ax1.text(0.02, base - 0.03, f"무작위 기준선 {base:.1%}", color=INK2, fontsize=8)
 
-    for m, c in zip(rf_models, [BLUE, ORANGE, AQUA]):
+    for m, c in zip(panel, [BLUE, ORANGE, AQUA, PURPLE]):
         prec, rec, _ = precision_recall_curve(y, scores[m])
         pr = metrics.loc[metrics["model"] == m, "pr_auc"].iloc[0]
+        dashed = m == CHEMPROP_LABEL
+        name = m.replace(" + RF", "")
+        if dashed:
+            name += " *"
         ax1.plot(rec, prec, lw=2, color=c, zorder=3, solid_capstyle="round",
-                 label=f"{m.replace(' + RF', '')}   {pr:.3f}")
+                 ls="--" if dashed else "-", label=f"{name}   {pr:.3f}")
     ax1.set_xlim(0, 1); ax1.set_ylim(0.4, 1.02)
     ax1.set_xlabel("recall"); ax1.set_ylabel("precision")
-    ax1.set_title("표현 비교 (분류기는 RF 로 고정), PR-AUC")
+    ax1.set_title("표현 계열 비교 (PR-AUC)")
     ax1.legend(loc="lower left", fontsize=8)
+    if CHEMPROP_LABEL in scores.columns:
+        # 범례·곡선과 겹치지 않도록 축 바깥(그림 하단)에 둔다.
+        # x 축 라벨과 겹치지 않게 아래 여백을 먼저 늘린다.
+        fig.subplots_adjust(bottom=0.19)
+        fig.text(0.013, 0.015,
+                 "* D-MPNN 은 표현 학습과 분류를 한 네트워크에서 하므로 "
+                 "분류기를 RF 로 고정할 수 없다 — 조건이 다르다",
+                 ha="left", va="bottom", fontsize=7.5, color=INK2)
 
     # ---- 우: 여섯 조합 전체
     ax2.grid(axis="x", zorder=0); ax2.set_axisbelow(True)
@@ -279,6 +327,7 @@ def main():
 
     scores = pd.read_csv("experiment/05_model_comparison/05_test_scores.csv")
     metrics = pd.read_csv("experiment/05_model_comparison/05_model_comparison.csv")
+    scores, metrics = add_chemprop(scores, metrics)
     fig_model_comparison(scores, metrics, out / "fig2_model_comparison.png")
 
     cpath = Path("experiment/07_filter/07_filter_counts.json")

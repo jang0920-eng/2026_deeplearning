@@ -249,6 +249,7 @@ sphere exclusion 은 점수 우선순위를 유지한 채 유사 구조만 배�
 
 | 파일 | 내용 |
 |---|---|
+| `fig2_model_comparison.png` | 좌: **4계열 PR 곡선** (지문·트랜스포머 2종·그래프) / 우: 7개 조합 지표와 EF 천장 |
 | `fig3_filter_funnel.png` | 1단계 필터에서 어느 기준이 얼마나 걸러냈는지 |
 | `fig4_ml_screen.png` | 좌: 142만 개 점수 분포 / 우: test 분자 회수 곡선 (EF) |
 | `fig5_diversity.png` | 좌: 선별 방식별 구조 중복 / 우: 도킹 대상의 물성 분포 |
