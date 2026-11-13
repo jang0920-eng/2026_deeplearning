@@ -51,7 +51,8 @@ report/       최종 보고서 (docx/pdf, 최대 20장, 본문 11pt)
 
 git commit 시 사용자 정보를 명시해야 함:
 ```bash
-git -c user.name="jang0920-eng" -c user.email="happiness5512@gmail.com" commit -m "..."
+git -c user.name="jang0920-eng" -c user.email="<본인 이메일>" commit -m "..."
+# 이메일은 공개 저장소라 적지 않는다. `git config user.email` 로 확인한다.
 ```
 
 ## 로컬 경로 (Windows)

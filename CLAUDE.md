@@ -74,7 +74,8 @@ ChEMBL 290만 개에서 virtual screening 으로 추린다.
 
 ```
 user.name  = jang0920-eng
-user.email = happiness5512@gmail.com
+user.email = (로컬 git config 또는 ~/.gitconfig 에서 확인한다.
+              공개 저장소라 여기에 적지 않는다)
 ```
 
 커밋은 `git -c user.name=... -c user.email=... commit` 으로 한다.
