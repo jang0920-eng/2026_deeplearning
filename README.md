@@ -21,12 +21,30 @@ CDK2 저해 신약 후보 물질을 virtual screening으로 도출한다.
 
 | 단계 | 방법 | 들어감 → 나옴 | 환경 |
 |---|---|---|---|
-| 1. 물리화학 필터 | RDKit (Lipinski, PAINS, lead-like) | 2,897,819 → 1,423,957 | CPU |
-| 2. 활성 예측 | Morgan fingerprint + Random Forest | 1,423,957 → 20,000 | CPU |
-| 3. 다양성 선별 | sphere exclusion (Tanimoto 0.6) | 10,000 → 1,000 | CPU |
-| 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 1,000 → 약 100 | Colab T4 |
-| 5. ADMET | ADMET 예측 | 약 100 → 15~30 | — |
-| 6. 구조 확장 | REINVENT (선택) | — | Colab T4 |
+| 단계 | 방법 | 들어감 → 나옴 | 환경 | 상태 |
+|---|---|---|---|---|
+| 1. 물리화학 필터 | RDKit (Lipinski, PAINS, lead-like) | 2,897,819 → 1,423,957 | 로컬 CPU | ✅ |
+| 2. 활성 예측 | Morgan fingerprint + Random Forest | 1,423,957 → 20,000 | 로컬 CPU | ✅ |
+| 3. 다양성 선별 | sphere exclusion (Tanimoto 0.6) | 10,000 → **996** | 로컬 CPU | ✅ |
+| 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 996 → 약 100 | Colab T4 | 🔶 219/996 |
+| 5. ADMET | ADMET-AI (chemprop D-MPNN, TDC) | 약 100 → 15~30 | 로컬 CPU | ⬜ 코드 준비 완료 |
+| 6. 구조 확장 | REINVENT | — | Colab T4 | ⬜ |
+
+3단계는 1,000개를 뽑았고 3D 구조 생성에서 4개가 실패해 **도킹 입력은 996개**다.
+
+## 활성 예측 모델 — 분자 표현 3계열 비교
+
+같은 scaffold split, 같은 평가 함수(`scripts/eval_utils.py`)로 비교했다.
+hyperparameter 와 threshold 는 val 에서 고르고 test 는 마지막에 한 번만 평가했다.
+
+| 계열 | 모델 | PR-AUC | ROC-AUC |
+|---|---|---|---|
+| 지문 | **Morgan + RF** (채택) | **0.8807** | **0.8231** |
+| 트랜스포머 | ChemBERTa-10M-MTR + RF | 0.8637 | 0.7985 |
+| 그래프 | Chemprop D-MPNN | 0.8577 | 0.8107 |
+
+표현을 학습하는 두 계열이 고정된 지문에 졌다. 학습 데이터가 2,721개 규모라
+표현을 배울 데이터가 부족하다. 전체 7개 조합은 `skill/03_screening.md` 참조.
 
 ## 재현 순서
 
@@ -35,14 +53,35 @@ CDK2 저해 신약 후보 물질을 virtual screening으로 도출한다.
 ```bash
 python scripts/01_fetch_chembl_cdk2.py                  # ChEMBL 활성 데이터
 python scripts/04_scaffold_split.py                     # scaffold split
-python scripts/05_model_comparison.py                   # 모델 6조합 비교
+python scripts/05_model_comparison.py                   # 지문·트랜스포머 6조합 비교
 python scripts/07_physchem_filter.py --input chembl_37_chemreps.txt.gz \
                                      --outdir experiment/07_filter
 python scripts/08_ml_screen.py --library experiment/07_filter/07_filtered_unique.csv.gz
 python scripts/09_diversity_select.py                   # 도킹 1,000개 선별
 python scripts/10_ligand_prep.py                        # 3D 구조 (seed 고정)
-python scripts/06_figures.py && python scripts/12_figures_screen.py
-# 4단계 도킹은 Colab: scripts/11_dock_1000.ipynb
+
+# 4단계 도킹은 Colab: scripts/11_dock_1000.ipynb → 11_top_for_admet.csv
+
+# 아래 둘은 chemprop 환경에서 (CPU, GPU 불필요)
+conda activate chemprop-env
+python scripts/12_chemprop_compare.py                   # 그래프 계열 추가 비교
+python scripts/13_admet.py --input experiment/11_docking/11_top_for_admet.csv \
+                           --outdir experiment/13_admet
+
+python scripts/06_figures.py && python scripts/12_figures_screen.py   # 그림
+```
+
+### 환경
+
+| 환경 | 용도 | 주요 패키지 |
+|---|---|---|
+| `my-rdkit-env` | 1~3단계 계산 | rdkit, scikit-learn, pandas |
+| `aizynth-env` | 그림 | matplotlib, scipy |
+| `chemprop-env` | 그래프 모델·ADMET | chemprop 2.3.1, admet-ai 2.0.1, torch 2.15.0+cpu |
+
+```bash
+conda create -y -n chemprop-env python=3.11
+conda activate chemprop-env && pip install chemprop admet-ai
 ```
 
 난수는 전부 고정돼 있다 — RF `random_state=42`, ETKDGv3 `randomSeed=42`,
@@ -50,7 +89,12 @@ GNINA `--seed 1`. scaffold split 은 난수를 쓰지 않는다(묶음 크기 �
 
 ## 진행 상황
 
+**2026-11-14 기준: 1~3단계 완료, 4단계 도킹 219/996 (22%) 진행 중.**
+5단계 ADMET 은 코드와 판정 기준까지 준비해 두었고 도킹이 끝나면 명령 한 줄로 실행한다.
+
 작업 내역과 각 결정의 근거는 [`skill/00_log.md`](skill/00_log.md)에 날짜별로 기록한다.
+지표를 그대로 쓰지 않고 적용 조건을 먼저 확인한 사례 두 건(EF 천장, ADMET 확률 문턱)도
+거기에 경위까지 적혀 있다.
 
 ## 참고
 
