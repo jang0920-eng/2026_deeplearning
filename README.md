@@ -26,7 +26,7 @@ CDK2 저해 신약 후보 물질을 virtual screening으로 도출한다.
 | 1. 물리화학 필터 | RDKit (Lipinski, PAINS, lead-like) | 2,897,819 → 1,423,957 | 로컬 CPU | ✅ |
 | 2. 활성 예측 | Morgan fingerprint + Random Forest | 1,423,957 → 20,000 | 로컬 CPU | ✅ |
 | 3. 다양성 선별 | sphere exclusion (Tanimoto 0.6) | 10,000 → **996** | 로컬 CPU | ✅ |
-| 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 996 → 약 100 | Colab T4 | 🔶 219/996 |
+| 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 996 → 약 100 | Colab T4 | 🔶 375/996 |
 | 5. ADMET | ADMET-AI (chemprop D-MPNN, TDC) | 약 100 → 15~30 | 로컬 CPU | ⬜ 코드 준비 완료 |
 | 6. 구조 확장 | REINVENT | — | Colab T4 | ⬜ |
 
@@ -89,7 +89,7 @@ GNINA `--seed 1`. scaffold split 은 난수를 쓰지 않는다(묶음 크기 �
 
 ## 진행 상황
 
-**2026-11-14 기준: 1~3단계 완료, 4단계 도킹 219/996 (22%) 진행 중.**
+**2026-11-14 기준: 1~3단계 완료, 4단계 도킹 375/996 (38%) 진행 중.**
 5단계 ADMET 은 코드와 판정 기준까지 준비해 두었고 도킹이 끝나면 명령 한 줄로 실행한다.
 
 작업 내역과 각 결정의 근거는 [`skill/00_log.md`](skill/00_log.md)에 날짜별로 기록한다.

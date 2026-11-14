@@ -64,14 +64,21 @@ def load_style():
 
 # ---- 그림 3: 깔때기 ----------------------------------------------------------
 
-def fig_funnel(S, stats08, stats09, outpath):
-    """단계별 분자 수. 2,897,819 → 1,000 은 네 자리 수 범위이므로 로그 축으로 그린다."""
+def fig_funnel(S, stats08, stats09, stats10, outpath):
+    """단계별 분자 수. 2,897,819 → 996 은 네 자리 수 범위이므로 로그 축으로 그린다.
+
+    ⚠ 3단계에서 1,000개를 뽑았지만 도킹 입력은 996개다. 3D 구조 생성에서 4개가
+    실패했다(MMFF 힘 상수 없음 3, embed 실패 1). 그림에서 1,000 → 4단계로 바로
+    이으면 숫자가 README·10단계 요약과 어긋나므로 **별도 칸으로 드러낸다.**
+    """
     done = [
         ("ChEMBL 37 전체", 2897819),
         ("1단계 물리화학 필터", 1423957),
         ("2단계 ML 활성 예측", stats08["top_n_saved"]),
         ("3단계 다양성 선별", stats09["selected"]),
     ]
+    if stats10:
+        done.append(("리간드 3D 구조 생성", stats10["prepared"]))
     planned = [("4단계 GNINA 도킹", 100), ("5단계 ADMET", 20)]
 
     labels = [d[0] for d in done + planned]
@@ -89,7 +96,13 @@ def fig_funnel(S, stats08, stats09, outpath):
                 color=S.SURFACE if is_planned else S.BLUE,
                 edgecolor=S.MUTED if is_planned else S.SURFACE,
                 linewidth=1.0, hatch="///" if is_planned else None)
-        ax.text(v * 1.35, yy, f"{v:,}" + ("  (예정)" if is_planned else ""),
+        note = ""
+        if is_planned:
+            note = "  (예정)"
+        elif stats10 and labels[i] == "리간드 3D 구조 생성":
+            # 1,000 과 996 은 로그 축에서 길이가 같아 보인다. 숫자로만 읽히므로 적는다.
+            note = f"  (1,000개 중 {stats10['input'] - stats10['prepared']}개 생성 실패)"
+        ax.text(v * 1.35, yy, f"{v:,}{note}",
                 va="center", ha="left", fontsize=8.5,
                 color=S.MUTED if is_planned else S.INK)
 
@@ -292,7 +305,9 @@ def main():
     fig_ml_screen(S, hist, known, stats08, outdir / "fig4_ml_screen.png")
     fig_diversity(S, nn, sel, known_actives_properties(args.split), stats09,
                   outdir / "fig5_diversity.png")
-    fig_funnel(S, stats08, stats09, outdir / "fig6_pipeline_funnel.png")
+    p10 = Path("experiment/10_ligands/10_ligand_prep_stats.json")
+    stats10 = json.loads(p10.read_text(encoding="utf-8")) if p10.exists() else None
+    fig_funnel(S, stats08, stats09, stats10, outdir / "fig6_pipeline_funnel.png")
 
 
 if __name__ == "__main__":
