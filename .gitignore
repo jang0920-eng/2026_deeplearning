@@ -45,6 +45,11 @@ experiment/07_filter/07_filtered*.csv*
 experiment/08_ml_screen/08_library_scores.csv
 experiment/08_ml_screen/*.joblib
 
+# 6단계 REINVENT — RF 모델은 2단계와 같은 것을 같은 split 으로 다시 학습한 것이라
+# 중복이다 (8.5MB). prior 가중치(23MB)도 Zenodo 에서 받는 것이라 올리지 않는다.
+experiment/15_reinvent/ml/*.joblib
+*.prior
+
 # 인수인계 문서는 제출물에 들어갈 성격이 아니다 (배점별 전략 메모 포함).
 # 로컬에는 두고 저장소에서만 제외한다. 백업은 Drive 사본으로 한다.
 docs/HANDOFF.md

@@ -1,0 +1,56 @@
+{
+ "library_scored": 5581,
+ "top_n_saved": 50,
+ "known_in_top_n": 0,
+ "score_min": 0.026,
+ "score_median": 0.342,
+ "score_max": 0.828,
+ "score_at_top_n": 0.5948,
+ "n_score_ge_0.5": 360,
+ "n_score_ge_0.7": 5,
+ "n_score_ge_0.9": 0,
+ "filter_retention": {
+  "known_total": 2721,
+  "known_in_library": 0,
+  "known_active_total": 1785,
+  "known_active_in_library": 0
+ },
+ "enrichment": {
+  "test": {
+   "n_in_library": 0,
+   "n_active_in_library": 0,
+   "active_top0.001": 0,
+   "ef_top0.001": NaN,
+   "active_top0.01": 0,
+   "ef_top0.01": NaN,
+   "active_top0.05": 0,
+   "ef_top0.05": NaN,
+   "median_percentile_active": NaN,
+   "median_percentile_inactive": NaN
+  },
+  "train": {
+   "n_in_library": 0,
+   "n_active_in_library": 0,
+   "active_top0.001": 0,
+   "ef_top0.001": NaN,
+   "active_top0.01": 0,
+   "ef_top0.01": NaN,
+   "active_top0.05": 0,
+   "ef_top0.05": NaN,
+   "median_percentile_active": NaN,
+   "median_percentile_inactive": NaN
+  },
+  "val": {
+   "n_in_library": 0,
+   "n_active_in_library": 0,
+   "active_top0.001": 0,
+   "ef_top0.001": NaN,
+   "active_top0.01": 0,
+   "ef_top0.01": NaN,
+   "active_top0.05": 0,
+   "ef_top0.05": NaN,
+   "median_percentile_active": NaN,
+   "median_percentile_inactive": NaN
+  }
+ }
+}

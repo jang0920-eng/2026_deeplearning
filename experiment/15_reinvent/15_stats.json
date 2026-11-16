@@ -1,0 +1,61 @@
+{
+  "prior": {
+    "path": "C:/Users/happi/OneDrive/바탕 화면/딥러닝/reinvent_prior/reinvent.prior",
+    "pretrained_on": "ChEMBL 25",
+    "network_params": {
+      "dropout": 0.0,
+      "layer_size": 512,
+      "num_layers": 3,
+      "cell_type": "lstm",
+      "embedding_layer_size": 256
+    },
+    "vocab_size": 34,
+    "max_sequence_length": 256,
+    "n_parameters": 5805602
+  },
+  "sampling": {
+    "n_requested": 10000,
+    "seed": 20261117,
+    "temperature": 1.0,
+    "seconds": 120.5,
+    "per_second": 83.0,
+    "n_truncated_at_max_len": 0
+  },
+  "validity": {
+    "n_valid": 9852,
+    "validity": 0.9852,
+    "threshold": 0.85,
+    "passed": true,
+    "n_standardized": 9852
+  },
+  "dedup": {
+    "n_unique_within_generated": 9851,
+    "uniqueness": 0.9999,
+    "match_docking996": 0,
+    "match_cdk2_actives": 0,
+    "match_library": 242,
+    "n_novel": 9609,
+    "novelty": 0.9754,
+    "library_compared": true
+  },
+  "similarity_report_only": {
+    "docking996": {
+      "n": 9609,
+      "mean": 0.2424,
+      "median": 0.2366,
+      "p90": 0.3045,
+      "max": 0.6154,
+      "ge_0.4": 109,
+      "ge_0.7": 0
+    },
+    "cdk2_actives": {
+      "n": 9609,
+      "mean": 0.2699,
+      "median": 0.2639,
+      "p90": 0.3385,
+      "max": 0.814,
+      "ge_0.4": 234,
+      "ge_0.7": 2
+    }
+  }
+}

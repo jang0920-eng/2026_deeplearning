@@ -29,6 +29,7 @@ ChEMBL 290만 개에서 virtual screening 으로 추린다.
 | `skill/03_screening.md` | 필터, 모델 3계열 비교, ML 적용, 다양성 선별 |
 | `skill/04_admet.md` | ADMET 도구 선정, 판정 기준, 표현 주의 |
 | `skill/05_report_prompt.md` | 보고서 작성 AI(Solar Pro4) 지시문 |
+| `skill/06_reinvent.md` | REINVENT prior 출처·구조, 생성 판정 기준, 한계 |
 
 ## 보고서 표현 규칙 (반드시 지킨다)
 
@@ -65,11 +66,17 @@ ChEMBL 290만 개에서 virtual screening 으로 추린다.
 |---|---|
 | `my-rdkit-env` | 1~3단계 계산 (rdkit, scikit-learn) |
 | `aizynth-env` | 그림 (matplotlib). **my-rdkit-env 에서 matplotlib 은 죽는다** |
-| `chemprop-env` | 그래프 모델·ADMET (chemprop 2.3.1, admet-ai 2.0.1, CPU) |
+| `chemprop-env` | 그래프 모델·ADMET·6단계 REINVENT (chemprop 2.3.1, admet-ai 2.0.1, torch 2.15.0+cpu) |
 
-- 142만 개 라이브러리는 바탕화면 `딥러닝` 폴더에 있다
+- 142만 개 라이브러리는 바탕화면 `딥러닝` 폴더에 있다. `reinvent.prior` 도 거기 둔다
 - 도킹은 Colab 무료 T4. 결과는 Drive 에 누적되고 `dock_id` 로 이어서 돌린다
-- **5단계 ADMET 은 GPU 를 쓰지 않는다.** Colab 할당량은 도킹과 REINVENT 에만 쓴다
+- **5단계 ADMET 과 6단계 REINVENT sampling 은 GPU 를 쓰지 않는다.**
+  Colab 할당량은 **도킹에만** 쓴다 (생성 분자 상위 50개 도킹까지 포함)
+- ⚠ **`chemprop-env` 에 아무것도 설치하지 않는다.** REINVENT4 를 깔면 torch·numpy
+  버전이 바뀌어 5단계 ADMET 이 깨진다. 6단계는 추론 경로를 순수 torch 로 다시 구현해
+  설치 없이 돌린다 (`skill/06_reinvent.md` §2)
+- ⚠ Windows 에서 `conda run` 은 출력을 cp949 로 재인코딩하다 죽는다.
+  환경의 python 을 직접 부르고 `PYTHONIOENCODING=utf-8` 을 준다
 
 ## git
 

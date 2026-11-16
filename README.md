@@ -28,9 +28,15 @@ CDK2 저해 신약 후보 물질을 virtual screening으로 도출한다.
 | 3. 다양성 선별 | sphere exclusion (Tanimoto 0.6) | 10,000 → **996** | 로컬 CPU | ✅ |
 | 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 996 → 약 100 | Colab T4 | 🔶 375/996 |
 | 5. ADMET | ADMET-AI (chemprop D-MPNN, TDC) | 약 100 → 15~30 | 로컬 CPU | ⬜ 코드 준비 완료 |
-| 6. 구조 확장 | REINVENT | — | Colab T4 | ⬜ |
+| 6. 구조 확장 | REINVENT prior (SMILES-LSTM) sampling | 10,000 생성 → 신규 9,609 → 필터 5,581 → **50** | 로컬 CPU | ✅ 생성·선별 완료 |
 
 3단계는 1,000개를 뽑았고 3D 구조 생성에서 4개가 실패해 **도킹 입력은 996개**다.
+
+6단계는 1~3단계와 **반대 방향**이다. 1~5단계는 ChEMBL 이라는 기존 집합을 좁히고,
+6단계는 그 집합에 없는 SMILES 를 새로 만든다. 1단계 필터와 2단계 모델은 **기준을
+바꾸지 않고 그대로 재사용**했다. 생성 분자의 ML 점수 중앙값은 0.342 로 도킹 대상
+996개(0.806)보다 낮다 — prior 가 CDK2 를 모르기 때문이고, 근거와 한계는
+`skill/06_reinvent.md` 에 있다.
 
 ## 활성 예측 모델 — 분자 표현 3계열 비교
 
