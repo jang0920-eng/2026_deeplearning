@@ -212,6 +212,37 @@ prior 가 ChEMBL 25 로 학습했고 우리 라이브러리도 ChEMBL 에서 받
 | `experiment/15_reinvent/15_stats.json`, `15_summary.md` | 통계·요약 |
 | `experiment/15_reinvent/filter/07_filtered.csv` | 필터 통과 5,581개 |
 | `experiment/15_reinvent/ml/08_top_candidates.csv` | **도킹 후보 상위 50개** |
+| `experiment/15_reinvent/15_docking_input.csv` | 도킹 입력 (dock_id `G001`~`G050`) |
+| `experiment/15_reinvent/ligands_3d/ligands_all.sdf.gz` | 3D 구조 50개 (저장소 추적) |
+| `scripts/17_dock_generated.ipynb` | 생성 분자 전용 도킹 노트북 |
+
+## 6. 도킹 준비 (11/17 완료, 실행은 996개 뒤에)
+
+**3D 구조** — 996개와 **같은 스크립트·같은 시드**로 만들었다
+(`10_ligand_prep.py`, ETKDGv3 randomSeed=42, MMFF94s maxIters=2000 수렴 확인).
+**50개 전부 성공**했다 (996개 때는 1,000개 중 4개가 실패했다).
+
+**dock_id 충돌을 막았다.** `08_top_candidates.csv` 의 `rank` 열에는 동점이 4쌍
+있어서 그대로 id 로 쓰면 50개 중 4개가 겹친다. Drive `poses/` 는 dock_id 로
+파일을 쌓으므로 겹치면 **포즈가 조용히 덮어써진다.** 점수 내림차순 + gen_id
+오름차순으로 결정적 순번을 매겨 `G001`~`G050` 을 부여했고, 기존 `C0001`~`C1000`
+과 충돌이 0건임을 검증했다.
+
+**노트북** — `11_dock_1000.ipynb` 에서 파생했고 **경로·제목·세션 예산만** 바꿨다.
+박스(center 92.37/80.29/−47.95, size 16.1×15.8×16.5), exhaustiveness 8,
+num_modes 9, seed 1 은 **한 글자도 바꾸지 않았다.** 996개와 점수를 직접 비교하려면
+같은 조건이어야 한다. 치환 후 이 값들이 그대로인지 검증했다.
+
+출력은 `experiment/17_docking_generated/` 로 분리해 4단계 결과를 건드리지 않는다.
+50개 × 약 78초 = 약 1시간이므로 `MINUTES_BUDGET = 90` 으로 잡았다.
+
+⚠ **996개 도킹을 끝낸 뒤에 돌린다.** Colab 할당량은 4단계가 우선이다.
+
+**결과를 보기 전에 정해 두는 것**: 생성 분자의 2단계 ML 점수는 996개보다
+낮았다(중앙값 0.342 vs 0.806). 도킹 점수도 낮게 나올 수 있고, ML 점수와 다른
+순위를 줄 수도 있다. **어느 쪽으로 나오든 그대로 싣는다.** 생성 분자를 최종 후보에
+넣을지는 도킹 결과를 보고 정하되, 넣는다면 **1~5단계 후보와 같은 줄에 놓지 않고
+출처를 구분해 적는다** (§4 한계 4 — 합성 가능성을 검증하지 않았다).
 
 ---
 

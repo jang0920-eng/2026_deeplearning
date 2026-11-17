@@ -1,0 +1,12 @@
+{
+ "input": 50,
+ "prepared": 50,
+ "batches": 1,
+ "batch_size": 50,
+ "status": {
+  "ok": 50
+ },
+ "seed": 42,
+ "mmff_variant": "MMFF94s",
+ "mmff_iters": 2000
+}

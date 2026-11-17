@@ -14,6 +14,9 @@ experiment/**/ligands/
 *.sdf.gz
 # 예외 — 도킹 입력 리간드는 재현에 필요하므로 추적한다 (약 0.4MB)
 !experiment/10_ligands/ligands_all.sdf.gz
+# 6단계 생성 분자 상위 50개의 도킹 입력도 같은 이유로 추적한다 (20KB).
+# Colab 노트북이 GitHub raw 로 받아 가므로 저장소에 있어야 한다.
+!experiment/15_reinvent/ligands_3d/ligands_all.sdf.gz
 *.mol2
 *.pdbqt
 *.smi
