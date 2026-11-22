@@ -26,8 +26,8 @@ CDK2 저해 신약 후보 물질을 virtual screening으로 도출한다.
 | 1. 물리화학 필터 | RDKit (Lipinski, PAINS, lead-like) | 2,897,819 → 1,423,957 | 로컬 CPU | ✅ |
 | 2. 활성 예측 | Morgan fingerprint + Random Forest | 1,423,957 → 20,000 | 로컬 CPU | ✅ |
 | 3. 다양성 선별 | sphere exclusion (Tanimoto 0.6) | 10,000 → **996** | 로컬 CPU | ✅ |
-| 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 996 → 약 100 | Colab T4 | 🔶 375/996 |
-| 5. ADMET | ADMET-AI (chemprop D-MPNN, TDC) | 약 100 → 15~30 | 로컬 CPU | ⬜ 코드 준비 완료 |
+| 4. 도킹 | GNINA v1.3.3 (CNN rescore) | 996 → **100** | Colab T4 | ✅ 995/996 (실패 1) |
+| 5. ADMET | ADMET-AI (chemprop D-MPNN, TDC) | 100 → **30** | 로컬 CPU | ✅ |
 | 6. 구조 확장 | REINVENT prior (SMILES-LSTM) sampling | 10,000 생성 → 신규 9,609 → 필터 5,581 → **50** | 로컬 CPU | ✅ 생성·선별 완료 |
 
 3단계는 1,000개를 뽑았고 3D 구조 생성에서 4개가 실패해 **도킹 입력은 996개**다.
@@ -95,8 +95,13 @@ GNINA `--seed 1`. scaffold split 은 난수를 쓰지 않는다(묶음 크기 �
 
 ## 진행 상황
 
-**2026-11-14 기준: 1~3단계 완료, 4단계 도킹 375/996 (38%) 진행 중.**
-5단계 ADMET 은 코드와 판정 기준까지 준비해 두었고 도킹이 끝나면 명령 한 줄로 실행한다.
+**2026-11-22 기준: 1~5단계 완료.** 도킹 995/996 성공(총 21.7시간, 실패 1개),
+ADMET 하드 필터 통과 30개가 최종 우선순위다. 남은 것은 6단계 생성 분자 50개
+도킹과 보고서 작성이다.
+
+최종 후보 30개는 ADMET 통과분 중 상위 30개를 **고른 것이 아니라 통과한 전부**다.
+문턱값(승인 약물 백분위 90)에 따라 통과 수가 2~56개로 변하므로 개수 자체에
+의미를 두지 않는다. 경위는 [`skill/04_admet.md`](skill/04_admet.md) §6 에 있다.
 
 작업 내역과 각 결정의 근거는 [`skill/00_log.md`](skill/00_log.md)에 날짜별로 기록한다.
 지표를 그대로 쓰지 않고 적용 조건을 먼저 확인한 사례 두 건(EF 천장, ADMET 확률 문턱)도

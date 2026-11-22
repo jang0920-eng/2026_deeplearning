@@ -46,10 +46,18 @@ def load_style():
     return mod
 
 
-def partial_note(n):
-    """부분 결과면 제목에 그대로 적는다. 숨기지 않는다."""
-    if n < N_DOCK_TOTAL:
-        return f"  ⚠ 부분 결과 {n}/{N_DOCK_TOTAL}"
+def partial_note(n_attempted, n_valid=None):
+    """도킹을 다 못 돌린 것과 돌렸는데 실패한 것을 구분해 제목에 적는다.
+
+    둘 다 n < 996 이지만 뜻이 다르다. 앞은 그림을 보고서에 쓰면 안 된다는
+    경고이고, 뒤는 완주한 결과에 실패 분자가 몇 개 있었다는 보고다.
+    """
+    if n_valid is None:
+        n_valid = n_attempted
+    if n_attempted < N_DOCK_TOTAL:
+        return f"  ⚠ 부분 결과 {n_attempted}/{N_DOCK_TOTAL}"
+    if n_valid < n_attempted:
+        return f"  (도킹 실패 {n_attempted - n_valid}개 제외)"
     return ""
 
 
@@ -58,7 +66,15 @@ def partial_note(n):
 def fig_docking_scores(S, dock, n_top, outpath):
     ok = dock.dropna(subset=["vina_top", "cnn_affinity_top"]).copy()
     n = len(ok)
-    note = partial_note(n)
+    note = partial_note(len(dock), n)
+
+    # 양수 Vina 점수(결합 불성립)가 몇 개 섞여 있으면 축이 거기까지 늘어나
+    # 분포와 산점도가 왼쪽 끝에 뭉친다. 개수는 (a) 에 글로 적고 축은 자른다.
+    # 자른 사실을 축 이름에 적는다. 숨기고 자르지 않는다.
+    x_hi = float(np.nanpercentile(ok["vina_top"], 99.5))
+    x_lo = float(ok["vina_top"].min())
+    clipped = int((ok["vina_top"] > x_hi).sum())
+    xlim = (x_lo - 0.4, x_hi + 0.4)
 
     fig, axes = plt.subplots(1, 3, figsize=(13.4, 3.7))
 
@@ -66,7 +82,9 @@ def fig_docking_scores(S, dock, n_top, outpath):
     ax = axes[0]
     ax.grid(axis="y", zorder=0)
     ax.set_axisbelow(True)
-    ax.hist(ok["vina_top"], bins=40, color=S.BLUE, zorder=3)
+    ax.hist(ok["vina_top"].clip(upper=xlim[1]), bins=40, range=xlim,
+            color=S.BLUE, zorder=3)
+    ax.set_xlim(*xlim)
     cut = ok["vina_top"].nsmallest(min(n_top, n)).max()
     ax.axvline(cut, color=S.ORANGE, lw=1.6, ls="--", zorder=4)
     ax.annotate(f"상위 {min(n_top, n)}개 경계\n{cut:.2f} kcal/mol",
@@ -77,7 +95,9 @@ def fig_docking_scores(S, dock, n_top, outpath):
                           edgecolor="none"))
     n_pos = int((ok["vina_top"] > 0).sum())
     if n_pos:
-        ax.text(0.98, 0.72, f"양수 점수 {n_pos}개\n(결합 불성립)",
+        ax.text(0.98, 0.72,
+                f"양수 점수 {n_pos}개\n(결합 불성립)"
+                + (f"\n축 밖 {clipped}개는 오른쪽 끝에 모음" if clipped else ""),
                 transform=ax.transAxes, ha="right", va="top", fontsize=8.2,
                 color=S.INK2)
     ax.set_xlabel("Vina 점수 (kcal/mol) — 낮을수록 결합에 유리")
@@ -102,15 +122,18 @@ def fig_docking_scores(S, dock, n_top, outpath):
             markeredgewidth=0.8, label=f"순위 평균 상위 {len(sel)}개")
 
     rho = ok[["vina_top", "cnn_affinity_top"]].corr(method="spearman").iloc[0, 1]
+    # 왼쪽 위는 순위 평균 상위 100개가 모이는 자리라 상자를 오른쪽 위에 둔다
     ax.annotate(f"Spearman ρ = {rho:.3f}",
-                xy=(0.04, 0.96), xycoords="axes fraction", va="top", ha="left",
+                xy=(0.96, 0.96), xycoords="axes fraction", va="top", ha="right",
                 fontsize=8.6, color=S.INK2,
                 bbox=dict(boxstyle="round,pad=0.4", facecolor=S.SURFACE,
                           edgecolor=S.MUTED, linewidth=0.7))
     ax.set_xlabel("Vina 점수 (kcal/mol)")
     ax.set_ylabel("CNNaffinity — 높을수록 유리")
     ax.set_title("(b) 물리 점수와 CNN 점수의 일치도", loc="left", pad=10)
-    ax.legend(loc="lower left", fontsize=8)
+    # 범례를 왼쪽 아래에 두면 Spearman 상자와 세로로 겹쳐 읽히지 않는다
+    ax.legend(loc="lower right", fontsize=8)
+    ax.set_xlim(*xlim)
 
     # (c) 2단계 ML 점수 vs 4단계 도킹 점수 — 단계가 독립적인 정보를 주는가
     ax = axes[2]
@@ -119,6 +142,7 @@ def fig_docking_scores(S, dock, n_top, outpath):
     if "ml_score" in ok.columns and ok["ml_score"].notna().any():
         ax.plot(ok["ml_score"], ok["vina_top"], "o", ms=3.4, lw=0,
                 color=S.AQUA, alpha=0.6, zorder=3)
+        ax.set_ylim(*xlim)   # (a)·(b) 와 같은 범위로 맞춘다 (상관계수는 전체로 계산)
         rho2 = ok[["ml_score", "vina_top"]].corr(method="spearman").iloc[0, 1]
         ax.annotate(f"Spearman ρ = {rho2:.3f}",
                     xy=(0.04, 0.96), xycoords="axes fraction", va="top", ha="left",
